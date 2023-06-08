@@ -10,7 +10,7 @@ const ScriptGenerator = (function ($) {
             <input name="{{fieldName}}_text" class="{{fieldName}}_text" placeholder="{{placeholder}}" />
             <input type="hidden" name="{{fieldName}}" class="{{fieldName}}" />
             {{else}}
-            <input name="{{fieldName}}" class="{{fieldName}}" placeholder="{{placeholder}}" value="{{placeholder}}" />
+            <input name="{{fieldName}}" class="{{fieldName}}" placeholder="{{placeholder}}" />
             {{/if}}
         </label>
     </div>
