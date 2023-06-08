@@ -1,0 +1,87 @@
+<html>
+ 
+<body>
+<!-- PROVIDED IN CONLUENCE PAGES -->
+<script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+
+<!-- FOR EACH GENERATOR -->
+<!-- FORM CONFIGURATION -->
+<!-- ****EDIT**** -->
+<!-- PARAMETERS TEMPLATES -->
+<div id="generatorIdMustBeUniqueInThePage">
+    <script type="text/javascript">
+        $(document).ready(() => {
+            const timeZones = ["", "Europe/Paris", "Europe/Madrid"];
+            const countries = [{"text":"Andorra", "value":"AD"},{"text":"Czech Republic", "value":"CZ"},{"text":"Danemark", "value":"DK"},{"text":"France", "value":"FR"},{"text":"Niue", "value":"NU"},{"text":"Noorwegen", "value":"NO"},{"text":"Soudan", "value":"SD"},{"text":"Turchia", "value":"TR"},{"text":"Viet Nam", "value":"VN"}];
+            let mySchema = [
+                {"fieldName": "airportCode", "placeholder": "CDG", "defaultValue":"CDG"},
+                {"fieldName": "cityCode", "placeholder": "PAR"},
+                {"fieldName": "timeZone", "placeholder": "Europe/Paris", values: timeZones},
+                {"fieldName": "countryCode", "placeholder": "France", values: countries},
+                {"fieldName": "airportName", "placeholder": "Charles De Gaulle"},
+                {"fieldName": "latitude", "placeholder": "49.016667"},
+                {"fieldName": "longitude", "placeholder": "2.55"}
+            ];
+            new ScriptGenerator(mySchema, 'generatorIdMustBeUniqueInThePage');
+        });
+    </script>
+     
+    <!-- SQL SCRIPTS' TEMPLATES -->
+    <script type="text/templates" name="Update">
+        airportCode: {{airportCode}}
+        cityCode: {{cityCode}}
+        timeZone: {{timeZone}}
+        countryCode: {{countryCode}}
+        airportName: {{airportName}}
+        latitude: {{latitude}}
+        longitude: {{longitude}}
+    </script>
+    <script type="text/templates" name="Rollback">
+        <b>
+            airportCode: {{airportCode}}
+            cityCode: {{cityCode}}
+            timeZone: {{timeZone}}
+            countryCode: {{countryCode}}
+            airportName: {{airportName}}
+            latitude: {{latitude}}
+            longitude: {{longitude}}
+        </b>
+    </script>
+    <!-- ****/EDIT**** -->
+     
+     
+</div>
+
+<div id="generatorIdMustBeUniqueInThePage2">
+    <script type="text/javascript">
+        $(document).ready(() => {
+            let mySchema = [
+                {"fieldName": "airportCode", "placeholder": "CDG"}
+            ];
+            new ScriptGenerator(mySchema, 'generatorIdMustBeUniqueInThePage2');
+        });
+    </script>
+     
+    <!-- SQL SCRIPTS' TEMPLATES -->
+    <script type="text/templates" name="Update">
+        airportCode: {{airportCode}}
+    </script>
+    <script type="text/templates" name="Rollback">
+        <b>airportCode: {{airportCode}}</b>
+    </script>
+    <!-- ****/EDIT**** --> 
+</div>
+<!--   ONLY ONCE   -->
+<!-- PAGE CONTROLS -->
+<!-- page style -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.7/handlebars.min.js" integrity="sha512-RNLkV3d+aLtfcpEyFG8jRbnWHxUqVZozacROI4J2F1sTaDqo1dPQYs01OMi1t1w9Y2FdbSCDSQ2ZVdAC8bzgAg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<link rel="stylesheet" href="generatesql.css" />
+<script src="generatesql.js">
+
+</script>
+
+</body>
+</html>
+
