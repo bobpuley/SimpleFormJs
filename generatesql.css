@@ -1,0 +1,13 @@
+span.form-label {
+    display:inline-block;
+    width: 12em;
+}
+div.inputForm {
+    margin: .5em;
+}
+pre.scriptsDisplay div.code {
+    background-color: black;
+    color: white;
+    font-family: monospace;
+    padding: 1em;
+}
