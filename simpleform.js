@@ -27,7 +27,7 @@ const ScriptGenerator = (function ($) {
         <div class="formContainer" style="display: none;">
             <div class="formInputContainer">
             </div>
-            <div class="inputForm"><button type="button">Excute</button></div>
+            <div class="inputForm"><button type="button">Execute</button></div>
         </div>
         <div class="scriptsContainer" style="display: none;">
             <button type="button">Reset</button>
