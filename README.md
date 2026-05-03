@@ -25,7 +25,7 @@ Usage
 ```html
     <script src="path/to/jquery.min.js"></script>
     <script src="path/to/handlebars.min.js"></script>
-    <script src="path/to/SimpleFormJs.js"></script>
+    <script src="path/to/simpleform.js"></script>
 ```
 
 3.  Initialize the library by creating an instance of the `ScriptGenerator` class:
