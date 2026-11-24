@@ -1,83 +1,322 @@
 SimpleFormJs
 ============
 
-SimpleFormJs is a JavaScript library that simplifies the process of generating dynamic forms and executing scripts based on user input. It requires jQuery and Handlebars.js to be included in your project.
+**Declare the data once, collect it with a generated form, produce scripts, configurations and documents with templates.**
 
-Installation
+SimpleFormJs turns a small schema into an accessible form and feeds the values to one or more
+[Handlebars](https://handlebarsjs.com/) templates — SQL scripts and their rollback, YAML/JSON configs, shell commands,
+HTML snippets… It is designed for runbooks, wiki/Confluence pages and internal tools where the person filling in the form
+should never touch the template.
+
+- Vanilla JavaScript, **no jQuery**. Handlebars is the only dependency (and can be swapped).
+- Live preview with highlighted missing values, **Copy** and **Download** per output.
+- Declarative validation, conditional and dependent fields, autocomplete with async suggestions.
+- Escaping helpers (`{{sql}}`, `{{quote}}`, `{{json}}` …) and built-in syntax highlighting.
+- Presets, shareable links (`persist: 'url'`), `localStorage` persistence.
+- Batch mode with CSV import, custom field plugins, hooks and DOM events.
+- No-code mode: a form from markup only. JSON schemas you can load and export.
+- 1.x pages keep working through the `ScriptGenerator` adapter.
+
+👉 **Live demo / guided tour:** <https://bobpuley.github.io/SimpleFormJs/showcases/example/> — source in
+[`showcases/example/`](showcases/example/index.html) (run it locally with `npm run serve`, then open
+<http://localhost:4173/showcases/example/>).
+
+Contents: [Install](#install) · [Quick start](#quick-start) · [Fields](#fields) · [Templates](#templates) ·
+[Options](#options) · [API](#api) · [No-code mode](#no-code-mode) · [Plugins](#custom-field-types) ·
+[Migrating from 1.x](#migrating-from-1x) · [Development](#development)
+
+Install
+-------
+
+**Script tags** (exposes `window.SimpleForm` and `window.ScriptGenerator`):
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bobpuley/SimpleFormJs@2/dist/simpleform.css">
+<script src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bobpuley/SimpleFormJs@2/dist/simpleform.umd.min.js"></script>
+```
+
+Handlebars is looked up when a form is created, not when the library loads, so the order of the two scripts does not
+matter as long as both are on the page before you create a form.
+
+**npm / bundlers** (once published to npm; until then `npm install github:bobpuley/SimpleFormJs`):
+
+```bash
+npm install simpleformjs handlebars
+```
+
+```js
+import Handlebars from 'handlebars';
+import { SimpleForm } from 'simpleformjs';
+import 'simpleformjs/simpleform.css';
+
+SimpleForm.create({ element: '#app', handlebars: Handlebars, schema, templates });
+```
+
+Quick start
+-----------
+
+```html
+<div id="airport"></div>
+<script>
+  SimpleForm.create({
+    element: '#airport',
+    schema: [
+      { name: 'airportCode', label: 'Airport code', defaultValue: 'CDG', required: true, pattern: '^[A-Z]{3}$' },
+      { name: 'airportName', label: 'Airport name', required: true },
+      { name: 'previousName', label: 'Previous name' }
+    ],
+    templates: {
+      update:   { title: 'Update', language: 'sql', filename: 'update-{{airportCode}}.sql',
+                  source: 'UPDATE airport SET name = {{sql airportName}} WHERE code = {{sql airportCode}};' },
+      rollback: { title: 'Rollback', language: 'sql',
+                  source: 'UPDATE airport SET name = {{sql previousName}} WHERE code = {{sql airportCode}};' }
+    }
+  });
+</script>
+```
+
+`SimpleForm.create(config)` is a shorthand for `new SimpleForm(config).render()`.
+
+While required fields are empty the preview shows them as highlighted placeholders and Copy/Download are disabled.
+
+Fields
+------
+
+| Property | Description |
+| --- | --- |
+| `name` | **Required.** Variable name used in templates (letters, digits, `_`, `$`). `rows`, `count`, `index`, `isFirst`, `isLast` are reserved. |
+| `type` | `text` (default), `number`, `date`, `textarea`, `checkbox`, `select`, `autocomplete`, `email`, `url`, or a [custom type](#custom-field-types). Fields with `options` default to `select`. |
+| `label` | Text shown to the user (defaults to `name`). |
+| `placeholder`, `help` | Placeholder and help text below the control. |
+| `defaultValue` | Initial value (also restored by Reset). |
+| `required`, `min`, `max`, `minLength`, `maxLength`, `pattern` | Validation shortcuts (same as inside `validation`). |
+| `validation` | `{ required, min, max, minLength, maxLength, pattern, custom, message, messages }`. `custom(value, allValues)` returns `true`, `false` or an error message. `message` overrides every rule message except `required`; `messages.<rule>` overrides one rule. |
+| `options` | For `select`/`autocomplete`: an array (`'IT'` or `{ text, value }`), a function `({ values, query, signal }) => list \| Promise<list>`, or an object keyed by the value of the single `dependsOn` field. Templates receive `value`; users see `text`. |
+| `optionsUrl` | URL returning a JSON array. `{field}` and `{query}` placeholders are replaced (and URL-encoded). No request is made while a referenced field is empty. |
+| `dependsOn` | Field name(s): when they change, options are reloaded. |
+| `visibleWhen` | `{ field, equals }`, `{ field, notEquals }`, `{ field, in: [] }`, `{ field, notIn: [] }`, `{ field, empty }`, `{ field }` (truthy), a function `(values) => boolean`, or an array of rules (all must match). Hidden fields are not validated and are not passed to templates. |
+| `allowCustom` | `autocomplete` only: accept text that matches no option. |
+| `debounce` | `autocomplete` only: delay before calling async options (ms, default 200). |
+| `step`, `rows`, `attrs` | `number` step, `textarea` rows, extra HTML attributes for the control. |
+
+Templates
+---------
+
+```js
+templates: {
+  key: 'source',                         // shorthand
+  other: {
+    source: '…',                         // Handlebars template
+    title: 'Shown above the output',
+    mode: 'text',                        // 'text' (default) | 'plain' | 'html', see below
+    language: 'sql',                     // highlighting: sql, json, yaml, shell
+    filename: '{{code}}.sql',            // download name, itself a template
+    perRow: false,                       // batch mode: render once per row…
+    separator: '\n'                      // …joined with this separator
+  }
+}
+```
+
+Templates can also be written in the page, inside the form container (indentation is removed automatically):
+
+```html
+<script type="text/templates" name="Update" data-language="sql" data-filename="{{code}}.sql">
+  UPDATE airport SET name = {{sql name}} WHERE code = {{sql code}};
+</script>
+```
+
+Supported attributes: `name`, `data-title`, `data-mode`, `data-language`, `data-filename`, `data-per-row`, `data-separator`.
+
+**Output modes.**
+
+| `mode` | Shown as | Typical use |
+| --- | --- | --- |
+| `text` (default) | a code block, with syntax highlighting if `language` is set | SQL, YAML, JSON, shell |
+| `plain` | regular text, line breaks kept, no highlighting | emails, messages, tickets |
+| `html` | rendered markup | HTML snippets, formatted documents |
+
+**Escaping.** In `text` and `plain` modes the output is never interpreted as HTML and values are inserted verbatim
+(`O'Brien` stays `O'Brien`). Use the helper that matches your target format. In `html` mode the template
+markup is rendered while values are HTML-escaped by Handlebars.
+
+**Context.** Every template receives the field values plus `rows` (all rows), `count`, `index` (1-based), `isFirst`,
+`isLast`.
+
+### Helpers
+
+| Helper | Example | Result |
+| --- | --- | --- |
+| `sql` | `{{sql name}}` | `'O''Brien'`, `42`, `TRUE`, `NULL` when empty |
+| `quote` | `{{quote name}}` / `{{quote name "'"}}` | `"say \"hi\""` |
+| `json` | `{{json value}}` | JSON literal |
+| `upper` / `lower` / `trim` | `{{upper code}}` | |
+| `default` | `{{default owner "ops"}}` | fallback for empty values |
+| `now` | `{{now}}` / `{{now "date"}}` / `{{now "time"}}` / `{{now "datetime"}}` | |
+| `eq` `ne` `and` `or` `not` | `{{#if (eq country "IT")}}…{{/if}}` | |
+| `join` | `{{join list ", "}}` | |
+
+Add your own: `SimpleForm.registerHelper('slug', fn)` (global) or `helpers: { slug: fn }` (one form).
+
+Options
+-------
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `element` | — | **Required.** Selector or element that will contain the form. |
+| `schema` | — | **Required.** Array of fields. |
+| `templates` | from the DOM | Templates (see above). |
+| `title`, `description` | | Shown above the form. |
+| `livePreview` | `true` | `false` shows a **Generate** button; outputs appear after a successful validation. |
+| `presets` | | `{ name: { field: value } }` — adds a preset selector. |
+| `persist` | `false` | `'url'` (query string + *Copy share link* button) or `'local'` (`localStorage`). |
+| `persistKey` | `sf.<element id>` | Storage key / query parameter. Required when the element has no id. |
+| `batch` | `false` | `true` or `{ min: 1, max: Infinity, csv: true, initialRows: 1 }`. |
+| `highlight` | `true` | `false`, or `(code, language) => html` to plug Prism/highlight.js (must return escaped HTML). |
+| `helpers` | `{}` | Extra Handlebars helpers. |
+| `messages` | English | Any UI/validation message, e.g. `{ required: '{label} è obbligatorio', copy: 'Copia' }`. See `SimpleForm.messages`. |
+| `handlebars` | `window.Handlebars` | Handlebars instance to use. |
+| `engine` | | Replace Handlebars: `{ compile(source, { mode }) => (context) => string }`. |
+| `fetch` | `window.fetch` | Used by `optionsUrl`. |
+| `onChange`, `onRender`, `onInvalid`, `onCopy`, `onError` | | Hooks, see [Events](#events). |
+
+API
+---
+
+```js
+const form = new SimpleForm(config);   // validates the config, compiles templates
+form.render();                         // builds the DOM (returns form)
+
+form.getValues();                      // { … } or [{ … }] in batch mode (visible fields only)
+form.setValues(values);                // object, or array of rows in batch mode
+form.validate();                       // { valid, errors } and shows every error
+form.generate();                       // validate + render outputs (the Generate button)
+form.getOutputs();                     // { key: text } or null while invalid
+await form.copy('key');                // copy one output → boolean
+form.download('key');                  // download one output → file name
+form.applyPreset('prod');
+form.addRow(values); form.removeRow(index);
+form.importCSV(text, { append });      // → number of imported rows
+form.getShareUrl();                    // persist: 'url' only
+form.exportSchema();                   // { config, warnings } — JSON-serializable
+form.reset();
+form.on('render', fn);                 // → unsubscribe function
+form.destroy();
+
+SimpleForm.registerField(type, definition);
+SimpleForm.registerHelper(name, fn);
+await SimpleForm.loadSchema(url);      // → config object
+await SimpleForm.fromElement(element); // no-code mode for one element
+await SimpleForm.autoInit(root);       // no-code mode for every [data-simpleform]
+SimpleForm.parseCSV(text);  SimpleForm.highlight(code, language);  SimpleForm.fieldTypes();
+```
+
+Configuration problems throw a `SimpleFormError` whose `problems` array lists **every** issue found (unknown types,
+invalid names, broken regexes, references to missing fields, template syntax errors…).
+
+### Events
+
+| Event | Payload | When |
+| --- | --- | --- |
+| `change` | `{ values, errors, valid }` | values changed (not fired for the initial state) |
+| `render` | `{ outputs, values }` | outputs changed and the form is valid |
+| `invalid` | `{ errors }` | the set of errors changed |
+| `copy` | `{ template, text }` | an output was copied |
+| `error` | `{ error, template?, field?, hook? }` | template runtime error, failed option loading, failing hook |
+
+Listen with the `on<Event>` options, `form.on(event, fn)`, or DOM events `simpleform:<event>` that bubble from the
+container (`event.detail` holds the payload).
+
+No-code mode
 ------------
 
-To use SimpleFormJs, make sure you have included the following dependencies in your HTML file:
+The browser bundle initializes every `[data-simpleform]` element on `DOMContentLoaded` (add `data-simpleform-manual` to
+`<html>` to disable it):
 
--   jQuery: Add the following code to your page's `<head>` tag:
 ```html
-    <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
-```
--   Handlebars.js: Include the Handlebars.js library in your project. You can download it from the official website or include it via a CDN.
+<div data-simpleform>
+  <script type="application/json" class="sf-schema">
+    { "schema": [{ "name": "user", "required": true }, { "name": "role", "options": ["reader", "admin"] }] }
+  </script>
+  <script type="text/templates" name="Grant" data-language="sql">
+    GRANT {{upper role}} TO {{sql user}};
+  </script>
+</div>
 
-Usage
------
-
-1.  Clone the SimpleFormJs repository from GitHub:
-
-    `git clone https://github.com/bobpuley/SimpleFormJs.git`
-
-2.  Include the necessary dependencies in your HTML file:
-```html
-    <script src="path/to/jquery.min.js"></script>
-    <script src="path/to/handlebars.min.js"></script>
-    <script src="path/to/simpleform.js"></script>
+<!-- or keep the whole configuration in a file -->
+<div data-simpleform data-schema-src="forms/airport.json"></div>
 ```
 
-3.  Initialize the library by creating an instance of the `ScriptGenerator` class:
-```javascript
-    const formSchema = [
-      // Define your form schema here
-    ];
+`data-live-preview="false"` and `data-persist="url|local"` are also supported.
 
-    const generatorId = 'your-generator-id'; // Optional
+Custom field types
+------------------
 
-    const scriptGenerator = new ScriptGenerator(formSchema, generatorId);`
-```
-4.  Customize the form schema to meet your requirements. The `formSchema` parameter is an array of objects representing each form field. Each object should have the following properties:
-
-    -   `fieldName`: The name of the field.
-    -   `placeholder`: The placeholder text for the field.
-    -   `values` (optional): An array of predefined values for the field. If provided, an auto-suggest feature will be enabled for the field.
-
-    Example form schema:
-```javascript
-    const formSchema = [
-      {
-        fieldName: 'name',
-        placeholder: 'Enter your name',
-      },
-      {
-        fieldName: 'email',
-        placeholder: 'Enter your email address',
-      },
-      {
-        fieldName: 'country',
-        placeholder: 'Select your country',
-        values: ['USA', 'Canada', 'UK', 'Australia'],
-      },
-    ];
+```js
+SimpleForm.registerField('coordinates', {
+  render(ctx) { /* return an element; put ctx.id on the focusable control; call ctx.emit() on change */ },
+  getValue(element, ctx) { /* → value */ },
+  setValue(element, value, ctx) { },
+  validate(value, ctx) { /* optional: → error message or null (runs before declarative rules) */ },
+  update(element, ctx) { /* optional: a dependsOn field changed */ },
+  emptyValue: ''        // optional: value used on reset
+});
 ```
 
-5.  Customize the templates (optional): SimpleFormJs uses Handlebars.js templates for rendering form fields and displaying the script results. If you want to customize the templates, you can modify the `formFieldTemplate` and `displayFieldTemplate` constants in the `SimpleFormJs.js` file.
+`ctx` provides `field`, `id`, `doc`, `messages`, `emit()`, `values()`, `format(message)` and `loadOptions(query)`.
 
-6.  Build and run your project. You should now see the dynamically generated form on your webpage. Fill in the form fields and click the "Execute" button to display the generated script results.
+Theming
+-------
+
+Every color and size is a CSS variable on `.sf-root` (`--sf-accent`, `--sf-border`, `--sf-code-bg`, `--sf-label-width`,
+`--sf-missing-bg`, …). Override them in your stylesheet.
+
+Each form is drawn as a card, so several forms on one page stay visually separate. Tune it with `--sf-card-border`,
+`--sf-card-radius`, `--sf-card-padding`, `--sf-card-shadow` and `--sf-card-margin`, or remove it:
+
+```css
+.sf-root { --sf-card-border: none; --sf-card-padding: 0; --sf-card-shadow: none; }
+```
+
+The layout is responsive (labels move above the inputs below 640px) and every input and button has a visible focus ring.
+
+Migrating from 1.x
+------------------
+
+1.x pages keep working with the 2.0 bundle:
+
+```js
+new ScriptGenerator(formSchema, 'generatorId'); // unchanged
+```
+
+- jQuery is no longer needed — you can remove it if nothing else uses it.
+- `fieldName` → `name` and `values` → autocomplete `options` are mapped automatically; `defaultValue` now works.
+- `generatorId` is really optional (the form is appended to `<body>`).
+- Templates are still read from `<script type="text/templates">` and rendered as HTML, as in 1.x. Outputs appear after
+  **Generate** (the old *Execute*).
+- The files moved: use `dist/simpleform.umd.min.js` and `dist/simpleform.css` instead of the root `simpleform.js` /
+  `simpleform.css`.
+
+For new code prefer `SimpleForm`: live preview, copy/download and text-mode templates.
+
+Development
+-----------
+
+```bash
+npm install
+npm run build          # dist/ (ESM, UMD, minified, CSS)
+npm test               # unit + functional tests (Vitest + jsdom)
+npm run test:e2e       # builds, then runs the showcase in Chromium (Playwright)
+npm run serve          # http://localhost:4173/showcases/example/
+```
+
+The first e2e run may need `npx playwright install chromium`.
+
+Source layout: `src/simpleform.js` (coordinator), `row.js` (fields of one row), `fields/` (built-in types and registry),
+`template-engine.js`, `helpers.js`, `highlight.js`, `output-view.js`, `schema.js`, `validation.js`, `conditions.js`,
+`options.js`, `persistence.js`, `csv.js`, `declarative.js`, `legacy.js`.
 
 License
 -------
 
-This library is licensed under the MIT License. For more information, please refer to the [LICENSE](https://github.com/bobpuley/SimpleFormJs/blob/main/LICENSE) file.
-
-Repository
-----------
-
-The source code for SimpleFormJs can be found on GitHub: <https://github.com/bobpuley/SimpleFormJs>
-
-Distribution
-------------
-
-SimpleFormJs is distributed using jsdeilvr.
+MIT — see [LICENSE](LICENSE).

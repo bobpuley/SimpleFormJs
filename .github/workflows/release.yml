@@ -1,0 +1,33 @@
+name: Release
+
+# Push a tag like v2.1.0 (it must match package.json "version") to create the GitHub release.
+# npm publish stays manual: `npm login && npm publish` (prepublishOnly runs lint, tests and build).
+# jsDelivr serves both the npm package and the GitHub tag automatically.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tag must match package.json version
+        run: test "v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: dist must be committed and up to date
+        run: git diff --exit-code -- dist
+      - name: GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
