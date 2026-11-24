@@ -39,11 +39,17 @@ export class OutputView {
       text: m.download,
       onClick: () => this.form.download(template.key),
     });
-    const body =
-      template.mode === 'html'
-        ? h(doc, 'div', { class: 'sf-html' })
-        : h(doc, 'code', { class: template.language ? `language-${template.language}` : undefined });
-    const content = template.mode === 'html' ? body : h(doc, 'pre', { class: 'sf-code' }, body);
+    let body;
+    let content;
+    if (template.mode === 'html') {
+      body = content = h(doc, 'div', { class: 'sf-html' });
+    } else if (template.mode === 'plain') {
+      // regular text (e.g. an email body): no code styling, still never parsed as HTML
+      body = content = h(doc, 'div', { class: 'sf-plain' });
+    } else {
+      body = h(doc, 'code', { class: template.language ? `language-${template.language}` : undefined });
+      content = h(doc, 'pre', { class: 'sf-code' }, body);
+    }
     const error = h(doc, 'div', { class: 'sf-template-error', role: 'alert', hidden: true });
     const element = h(
       doc,

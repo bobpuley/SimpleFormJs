@@ -240,7 +240,8 @@
         <code>default</code>, <code>now</code>, <code>eq</code>/<code>ne</code>/<code>and</code>/<code>or</code>/<code>not</code>,
         <code>join</code>. Add your own with <code>SimpleForm.registerHelper</code>. Each template sets its own
         <code>language</code> (syntax highlighting), <code>filename</code> (itself a template) and <code>mode</code>:
-        <code>text</code> (default, shown as code) or <code>html</code> (rendered, values still escaped).</p>
+        <code>text</code> (default, shown as a code block), <code>plain</code> (regular text, e.g. an email) or
+        <code>html</code> (rendered, values still escaped). <code>text</code> and <code>plain</code> are never parsed as HTML.</p>
       <div id="demo-outputs" class="demo"></div>
       <script data-demo>
         SimpleForm.registerHelper('slug', (value) =>
@@ -262,6 +263,8 @@
               'export const notice = {\n  title: {{quote title}},\n  message: {{quote message}},\n};' },
             json: { title: 'JSON', language: 'json', source:
               '{ "title": {{json title}}, "owner": {{json (default owner "ops-team")}}, "upper": {{json (upper title)}} }' },
+            email: { title: 'Email (plain text)', mode: 'plain', filename: 'notice.txt', source:
+              'Subject: {{title}}\n\nHello,\n\n{{message}}\n\n— {{default owner "ops-team"}}' },
             html: { title: 'HTML announcement', mode: 'html', source:
               '<h4>{{title}}</h4><p>{{message}}</p><p><small>Owner: {{default owner "ops-team"}}</small></p>' }
           }

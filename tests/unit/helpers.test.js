@@ -56,6 +56,10 @@ describe('TemplateEngine', () => {
     );
   });
 
+  it('plain mode, like text mode, does not HTML-escape', () => {
+    expect(run('{{v}}', { v: "<i>O'Brien</i>" }, 'plain')).toBe("<i>O'Brien</i>");
+  });
+
   it('reports syntax errors at compile time with the template name', () => {
     expect(() => engine.compile('{{#if x}}open', { name: 'broken' })).toThrow(/template "broken" cannot be compiled/);
   });

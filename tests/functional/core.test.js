@@ -243,3 +243,42 @@ describe('select DOM values', () => {
     expect(outputText(form, 't')).toBe('2');
   });
 });
+
+describe('plain output mode (issue #2)', () => {
+  const plain = {
+    schema: [{ name: 'name', required: true }, { name: 'note' }],
+    templates: {
+      email: { source: "Hello {{name}},\nSELECT 'not code';\n{{note}}", mode: 'plain', language: 'sql' },
+    },
+  };
+
+  it('renders regular text: no code block, no highlighting, never parsed as HTML', () => {
+    const form = mount(plain);
+    type(control(form, 'name'), "O'Brien");
+    type(control(form, 'note'), '<b>bold?</b>');
+    const panel = form.element.querySelector('[data-template="email"]');
+    const body = panel.querySelector('.sf-plain');
+    expect(panel.querySelector('pre, code')).toBeNull();
+    expect(body.querySelector('[class^="sf-tok-"], b')).toBeNull();
+    expect(body.textContent).toBe("Hello O'Brien,\nSELECT 'not code';\n<b>bold?</b>");
+    expect(form.getOutputs().email).toBe(body.textContent);
+  });
+
+  it('still marks missing required values', () => {
+    const form = mount(plain);
+    expect(form.element.querySelector('.sf-plain mark.sf-missing').textContent).toBe('name');
+  });
+
+  it('is accepted by the config validator alongside text and html', () => {
+    document.body.innerHTML = '<div id="x"></div>';
+    expect(() => new SimpleForm({ element: '#x', schema: [{ name: 'a' }], templates: { t: { source: 'x', mode: 'pdf' } } })).toThrow(
+      /mode must be "text", "plain" or "html"/,
+    );
+  });
+
+  it('can be declared in markup with data-mode="plain"', () => {
+    document.body.innerHTML = '<div id="d"><script type="text/templates" name="Mail" data-mode="plain">Hi {{a}}</script></div>';
+    const form = SimpleForm.create({ element: '#d', schema: [{ name: 'a', defaultValue: 'Ada' }] });
+    expect(form.element.querySelector('.sf-plain').textContent).toBe('Hi Ada');
+  });
+});

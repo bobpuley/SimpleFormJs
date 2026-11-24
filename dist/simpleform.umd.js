@@ -746,8 +746,16 @@ var SimpleFormJs = (() => {
         text: m.download,
         onClick: () => this.form.download(template.key)
       });
-      const body = template.mode === "html" ? h(doc, "div", { class: "sf-html" }) : h(doc, "code", { class: template.language ? `language-${template.language}` : void 0 });
-      const content = template.mode === "html" ? body : h(doc, "pre", { class: "sf-code" }, body);
+      let body;
+      let content;
+      if (template.mode === "html") {
+        body = content = h(doc, "div", { class: "sf-html" });
+      } else if (template.mode === "plain") {
+        body = content = h(doc, "div", { class: "sf-plain" });
+      } else {
+        body = h(doc, "code", { class: template.language ? `language-${template.language}` : void 0 });
+        content = h(doc, "pre", { class: "sf-code" }, body);
+      }
       const error = h(doc, "div", { class: "sf-template-error", role: "alert", hidden: true });
       const element = h(
         doc,
@@ -1174,7 +1182,7 @@ var SimpleFormJs = (() => {
   // src/schema.js
   var NAME_RE = /^[A-Za-z_$][\w$]*$/;
   var RESERVED_NAMES = ["rows", "count", "index", "isFirst", "isLast"];
-  var MODES = ["text", "html"];
+  var MODES = ["text", "plain", "html"];
   var PERSIST = [false, "url", "local"];
   function normalizeConfig(config = {}) {
     const batch = config.batch ? { min: 1, max: Infinity, csv: true, initialRows: 1, ...isPlainObject(config.batch) ? config.batch : {} } : null;
@@ -1305,7 +1313,7 @@ var SimpleFormJs = (() => {
     const keys = /* @__PURE__ */ new Set();
     for (const t of cfg.templates) {
       if (typeof t.source !== "string") problems.push(`template "${t.key}": "source" must be a string.`);
-      if (!MODES.includes(t.mode)) problems.push(`template "${t.key}": mode must be "text" or "html", got "${t.mode}".`);
+      if (!MODES.includes(t.mode)) problems.push(`template "${t.key}": mode must be "text", "plain" or "html", got "${t.mode}".`);
       if (keys.has(t.key)) problems.push(`template "${t.key}" is defined twice.`);
       keys.add(t.key);
     }
@@ -1421,15 +1429,16 @@ var SimpleFormJs = (() => {
       for (const [name, fn] of Object.entries(all)) this.hb.registerHelper(name, fn);
     }
     /**
-     * Compiles a template. `mode: 'text'` disables HTML escaping (the output is shown with
-     * textContent); `mode: 'html'` keeps Handlebars escaping so values cannot inject markup.
+     * Compiles a template. `mode: 'text'` and `mode: 'plain'` disable HTML escaping (the output is
+     * shown as text, never parsed as HTML); `mode: 'html'` keeps Handlebars escaping so values cannot
+     * inject markup.
      * Syntax errors are reported immediately, not at first render.
      */
     compile(source, { mode = "text", name = "template" } = {}) {
       try {
         if (this.custom) return this.custom.compile(source, { mode });
         this.hb.parse(source);
-        return this.hb.compile(source, { noEscape: mode === "text", strict: false });
+        return this.hb.compile(source, { noEscape: mode !== "html", strict: false });
       } catch (err) {
         throw new SimpleFormError(`SimpleForm: template "${name}" cannot be compiled: ${err.message}`);
       }
@@ -1741,7 +1750,11 @@ var SimpleFormJs = (() => {
       for (const template of this.config.templates) {
         try {
           const text = this.renderTemplate(template, contexts);
-          const previewHtml = template.mode === "html" ? replaceMarkers(text, (i) => `<mark class="sf-missing">${escapeHtml(labels[i]?.label ?? "?")}</mark>`) : toPreviewHtml(text, { language: template.language, highlight: this.safeHighlighter(), labels });
+          const previewHtml = template.mode === "html" ? replaceMarkers(text, (i) => `<mark class="sf-missing">${escapeHtml(labels[i]?.label ?? "?")}</mark>`) : toPreviewHtml(text, {
+            language: template.language,
+            highlight: template.mode === "plain" ? null : this.safeHighlighter(),
+            labels
+          });
           results.set(template.key, { previewHtml });
           if (valid) outputs[template.key] = text;
         } catch (error) {

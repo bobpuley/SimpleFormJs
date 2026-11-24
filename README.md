@@ -108,7 +108,7 @@ templates: {
   other: {
     source: '…',                         // Handlebars template
     title: 'Shown above the output',
-    mode: 'text',                        // 'text' (default, shown as code) or 'html' (rendered)
+    mode: 'text',                        // 'text' (default) | 'plain' | 'html', see below
     language: 'sql',                     // highlighting: sql, json, yaml, shell
     filename: '{{code}}.sql',            // download name, itself a template
     perRow: false,                       // batch mode: render once per row…
@@ -127,8 +127,16 @@ Templates can also be written in the page, inside the form container (indentatio
 
 Supported attributes: `name`, `data-title`, `data-mode`, `data-language`, `data-filename`, `data-per-row`, `data-separator`.
 
-**Escaping.** In `text` mode output is displayed with `textContent`, so nothing is interpreted as HTML and values are
-inserted verbatim (`O'Brien` stays `O'Brien`). Use the helper that matches your target format. In `html` mode the template
+**Output modes.**
+
+| `mode` | Shown as | Typical use |
+| --- | --- | --- |
+| `text` (default) | a code block, with syntax highlighting if `language` is set | SQL, YAML, JSON, shell |
+| `plain` | regular text, line breaks kept, no highlighting | emails, messages, tickets |
+| `html` | rendered markup | HTML snippets, formatted documents |
+
+**Escaping.** In `text` and `plain` modes the output is never interpreted as HTML and values are inserted verbatim
+(`O'Brien` stays `O'Brien`). Use the helper that matches your target format. In `html` mode the template
 markup is rendered while values are HTML-escaped by Handlebars.
 
 **Context.** Every template receives the field values plus `rows` (all rows), `count`, `index` (1-based), `isFirst`,
@@ -261,6 +269,15 @@ Theming
 
 Every color and size is a CSS variable on `.sf-root` (`--sf-accent`, `--sf-border`, `--sf-code-bg`, `--sf-label-width`,
 `--sf-missing-bg`, …). Override them in your stylesheet.
+
+Each form is drawn as a card, so several forms on one page stay visually separate. Tune it with `--sf-card-border`,
+`--sf-card-radius`, `--sf-card-padding`, `--sf-card-shadow` and `--sf-card-margin`, or remove it:
+
+```css
+.sf-root { --sf-card-border: none; --sf-card-padding: 0; --sf-card-shadow: none; }
+```
+
+The layout is responsive (labels move above the inputs below 640px) and every input and button has a visible focus ring.
 
 Migrating from 1.x
 ------------------

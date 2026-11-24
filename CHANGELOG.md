@@ -29,7 +29,9 @@ Complete rewrite in vanilla JavaScript. See `ideas/PROPOSTA.md` for the rational
 - `visibleWhen` conditions and `dependsOn` option reloading (maps, functions, `optionsUrl`).
 - Helpers: `sql`, `quote`, `json`, `upper`, `lower`, `trim`, `default`, `now`, `eq`, `ne`, `and`, `or`, `not`, `join`;
   `registerHelper`.
-- Text/HTML template modes, built-in highlighting (SQL, JSON, YAML, shell) or a custom highlighter.
+- Template modes `text` (code block), `plain` (regular text) and `html` (#2); built-in highlighting (SQL, JSON, YAML,
+  shell) or a custom highlighter.
+- Card layout separating forms, responsive layout, focus rings and new button styles (#3).
 - Presets, URL persistence with share links, `localStorage` persistence.
 - Batch mode with per-row templates and CSV import.
 - Hooks (`onChange`, `onRender`, `onInvalid`, `onCopy`, `onError`), `form.on()`, `simpleform:*` DOM events.

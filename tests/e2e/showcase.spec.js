@@ -134,6 +134,10 @@ test.describe('6. helpers and formats', () => {
     await demo.getByLabel('Message').fill('<img src=x onerror=alert(1)>');
     await expect(demo.locator('[data-template="html"] .sf-html p').first()).toHaveText('<img src=x onerror=alert(1)>');
     await expect(demo.locator('[data-template="html"] img')).toHaveCount(0);
+    const email = demo.locator('[data-template="email"] .sf-plain');
+    await expect(email).toContainText('Subject: Maintenance: Città del Capo');
+    await expect(email).toContainText('<img src=x onerror=alert(1)>');
+    await expect(demo.locator('[data-template="email"] pre')).toHaveCount(0);
     const download = page.waitForEvent('download');
     await demo.getByRole('button', { name: 'Download Shell' }).click();
     expect((await download).suggestedFilename()).toBe('maintenance-citta-del-capo.sh');
@@ -260,5 +264,31 @@ test.describe('13. generate flow and 1.x compatibility', () => {
     await expect(demo.locator('[data-template="Rollback"] .sf-html b')).toHaveText('airportCode: CDG');
     await demo.getByRole('button', { name: 'Reset' }).click();
     await expect(demo.locator('.sf-outputs')).toBeHidden();
+  });
+});
+
+test.describe('styling (issue #3)', () => {
+  test('each form is a separate card, inputs and buttons show a focus ring', async ({ page }) => {
+    await openTour(page, '#quick-start');
+    const card = await page.locator('#demo-quick .sf-root').evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { border: cs.borderTopWidth, radius: cs.borderTopLeftRadius, padding: cs.paddingTop };
+    });
+    expect(card).toEqual({ border: '1px', radius: '10px', padding: '20px' });
+
+    const input = page.locator('#demo-quick').getByLabel('Airport name');
+    await input.focus();
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    expect(await input.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
+  });
+
+  test('responsive: labels stack above inputs on narrow screens', async ({ page }) => {
+    await page.setViewportSize({ width: 400, height: 800 });
+    await openTour(page, '#quick-start');
+    const field = page.locator('#demo-quick [data-field="airportName"]');
+    const label = await field.locator('label').boundingBox();
+    const input = await field.locator('input').boundingBox();
+    expect(input.y).toBeGreaterThan(label.y + label.height - 1);
   });
 });

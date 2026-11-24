@@ -7,7 +7,8 @@ import { isPlainObject } from './utils.js';
 const NAME_RE = /^[A-Za-z_$][\w$]*$/;
 /** Names injected by SimpleForm in the template context. */
 export const RESERVED_NAMES = ['rows', 'count', 'index', 'isFirst', 'isLast'];
-const MODES = ['text', 'html'];
+/** text = code block, plain = regular text, html = rendered markup. */
+const MODES = ['text', 'plain', 'html'];
 const PERSIST = [false, 'url', 'local'];
 
 /** Turns the user configuration into a predictable shape. Does not throw. */
@@ -156,7 +157,7 @@ export function validateConfig(cfg) {
   const keys = new Set();
   for (const t of cfg.templates) {
     if (typeof t.source !== 'string') problems.push(`template "${t.key}": "source" must be a string.`);
-    if (!MODES.includes(t.mode)) problems.push(`template "${t.key}": mode must be "text" or "html", got "${t.mode}".`);
+    if (!MODES.includes(t.mode)) problems.push(`template "${t.key}": mode must be "text", "plain" or "html", got "${t.mode}".`);
     if (keys.has(t.key)) problems.push(`template "${t.key}" is defined twice.`);
     keys.add(t.key);
   }

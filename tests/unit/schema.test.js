@@ -62,5 +62,6 @@ describe('validateConfig', () => {
     expect(validateConfig(normalizeConfig({}))).toEqual(['"schema" must be a non-empty array of fields.']);
     expect(validateConfig(normalizeConfig({ schema: [{ name: 'a' }] })).join()).toMatch(/at least one template/);
     expect(problems({ schema: [{ name: 'a' }], templates: { t: { source: 'x', mode: 'pdf' } } }).join()).toMatch(/mode must be/);
+    expect(problems({ schema: [{ name: 'a' }], templates: { t: { source: 'x', mode: 'plain' } } })).toEqual([]);
   });
 });

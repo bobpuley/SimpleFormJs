@@ -47,15 +47,16 @@ export class TemplateEngine {
   }
 
   /**
-   * Compiles a template. `mode: 'text'` disables HTML escaping (the output is shown with
-   * textContent); `mode: 'html'` keeps Handlebars escaping so values cannot inject markup.
+   * Compiles a template. `mode: 'text'` and `mode: 'plain'` disable HTML escaping (the output is
+   * shown as text, never parsed as HTML); `mode: 'html'` keeps Handlebars escaping so values cannot
+   * inject markup.
    * Syntax errors are reported immediately, not at first render.
    */
   compile(source, { mode = 'text', name = 'template' } = {}) {
     try {
       if (this.custom) return this.custom.compile(source, { mode });
       this.hb.parse(source);
-      return this.hb.compile(source, { noEscape: mode === 'text', strict: false });
+      return this.hb.compile(source, { noEscape: mode !== 'html', strict: false });
     } catch (err) {
       throw new SimpleFormError(`SimpleForm: template "${name}" cannot be compiled: ${err.message}`);
     }

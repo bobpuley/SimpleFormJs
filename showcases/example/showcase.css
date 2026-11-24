@@ -67,7 +67,8 @@ kbd { border: 1px solid var(--tour-border); border-bottom-width: 2px; border-rad
 .try::before { content: "Try it"; display: block; margin-left: -1rem; font-weight: 600; }
 .csv-sample { display: inline-block; white-space: pre; margin-top: 0.3rem; }
 
-.demo { border: 1px solid var(--tour-border); border-radius: 8px; padding: 1rem; margin: 1rem 0 0.5rem; }
+/* each form draws its own card (--sf-card-* variables) */
+.demo { margin: 0; }
 .show-code summary { cursor: pointer; color: var(--tour-accent); font-weight: 500; }
 .tour-code {
   background: #0d1117;

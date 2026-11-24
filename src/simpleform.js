@@ -349,7 +349,11 @@ export class SimpleForm {
         const previewHtml =
           template.mode === 'html'
             ? replaceMarkers(text, (i) => `<mark class="sf-missing">${escapeHtml(labels[i]?.label ?? '?')}</mark>`)
-            : toPreviewHtml(text, { language: template.language, highlight: this.safeHighlighter(), labels });
+            : toPreviewHtml(text, {
+                language: template.language,
+                highlight: template.mode === 'plain' ? null : this.safeHighlighter(),
+                labels,
+              });
         results.set(template.key, { previewHtml });
         if (valid) outputs[template.key] = text;
       } catch (error) {
