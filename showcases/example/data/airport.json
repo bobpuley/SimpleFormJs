@@ -1,0 +1,27 @@
+{
+  "title": "Airport record (loaded from airport.json)",
+  "description": "This whole form — fields, presets and templates — comes from a JSON file.",
+  "schema": [
+    { "name": "airportCode", "label": "Airport code", "required": true, "pattern": "^[A-Z]{3}$", "placeholder": "CDG", "help": "IATA code, 3 uppercase letters" },
+    { "name": "airportName", "label": "Airport name", "required": true, "placeholder": "Charles de Gaulle" },
+    { "name": "country", "label": "Country", "type": "select", "options": [{ "text": "France", "value": "FR" }, { "text": "Italy", "value": "IT" }, { "text": "Spain", "value": "ES" }] },
+    { "name": "active", "label": "Active", "type": "checkbox", "defaultValue": true }
+  ],
+  "presets": {
+    "Paris CDG": { "airportCode": "CDG", "airportName": "Charles de Gaulle", "country": "FR" },
+    "Roma FCO": { "airportCode": "FCO", "airportName": "Leonardo da Vinci", "country": "IT" }
+  },
+  "templates": {
+    "insert": {
+      "title": "Insert",
+      "language": "sql",
+      "filename": "insert-{{airportCode}}.sql",
+      "source": "INSERT INTO airport (code, name, country, active)\nVALUES ({{sql airportCode}}, {{sql airportName}}, {{sql country}}, {{sql active}});"
+    },
+    "json": {
+      "title": "JSON payload",
+      "language": "json",
+      "source": "{\n  \"code\": {{json airportCode}},\n  \"name\": {{json airportName}},\n  \"country\": {{json country}},\n  \"active\": {{json active}}\n}"
+    }
+  }
+}

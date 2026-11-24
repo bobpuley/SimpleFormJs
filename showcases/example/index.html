@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SimpleFormJs 2.0 — guided tour</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../../dist/simpleform.css">
+  <link rel="stylesheet" href="showcase.css">
+  <!-- The only dependency: Handlebars. jQuery is no longer needed. -->
+  <script src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
+  <script src="../../dist/simpleform.umd.js"></script>
+</head>
+<body>
+<header class="tour-header">
+  <div>
+    <h1>SimpleFormJs <span class="badge">2.0</span></h1>
+    <p>Declare the data once, collect it with a generated form, produce scripts, configurations and documents with templates.</p>
+  </div>
+  <button type="button" id="theme-toggle" class="tour-button" aria-pressed="false">Dark theme</button>
+</header>
+
+<div class="tour-layout">
+  <nav class="tour-nav" aria-label="Tour steps">
+    <ol id="tour-steps"></ol>
+  </nav>
+
+  <main class="tour-main">
+
+    <section class="step" id="intro" data-title="How this tour works">
+      <h2>How this tour works</h2>
+      <p>Every step introduces one feature with a <strong>live demo</strong>. Under each demo, <em>Show code</em> reveals the exact
+        code that runs it — copy it into your page and it works the same way.</p>
+      <p>To use SimpleFormJs in a page you need three tags:</p>
+      <pre class="tour-code"><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bobpuley/SimpleFormJs@2/dist/simpleform.css"&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/bobpuley/SimpleFormJs@2/dist/simpleform.umd.min.js"&gt;&lt;/script&gt;</code></pre>
+      <p>or, with a bundler: <code>import { SimpleForm } from "simpleformjs";</code></p>
+    </section>
+
+    <!-- ============================================================ 1 -->
+    <section class="step" id="quick-start" data-title="Quick start">
+      <h2>1. Quick start</h2>
+      <p>A <strong>schema</strong> describes the fields; <strong>templates</strong> describe the outputs. One form can feed many
+        outputs: here an <code>UPDATE</code> script and its <code>ROLLBACK</code>.</p>
+      <ul class="try">
+        <li>Type in the fields: the preview updates live.</li>
+        <li>Empty the <em>Airport code</em>: it appears as a highlighted placeholder and <em>Copy</em> / <em>Download</em> are disabled.</li>
+        <li>Type a name with an apostrophe (<code>Charles d'Gaulle</code>): the <code>{{sql}}</code> helper escapes it.</li>
+      </ul>
+      <div id="demo-quick" class="demo"></div>
+      <script data-demo>
+        SimpleForm.create({
+          element: '#demo-quick',
+          schema: [
+            { name: 'airportCode', label: 'Airport code', defaultValue: 'CDG', required: true,
+              validation: { pattern: '^[A-Z]{3}$', message: 'Use 3 uppercase letters' } },
+            { name: 'airportName', label: 'Airport name', placeholder: 'Charles de Gaulle', required: true },
+            { name: 'previousName', label: 'Previous name', placeholder: 'Roissy' }
+          ],
+          templates: {
+            update: {
+              title: 'Update', language: 'sql', filename: 'update-{{airportCode}}.sql',
+              source: "UPDATE airport\n   SET name = {{sql airportName}}\n WHERE code = {{sql airportCode}};"
+            },
+            rollback: {
+              title: 'Rollback', language: 'sql',
+              source: "UPDATE airport\n   SET name = {{sql previousName}}\n WHERE code = {{sql airportCode}};"
+            }
+          }
+        });
+      </script>
+    </section>
+
+    <!-- ============================================================ 2 -->
+    <section class="step" id="field-types" data-title="Field types">
+      <h2>2. Field types</h2>
+      <p>Built-in types: <code>text</code>, <code>number</code>, <code>date</code>, <code>textarea</code>, <code>checkbox</code>,
+        <code>select</code>, <code>autocomplete</code>, <code>email</code>, <code>url</code>. Each field has a <code>label</code>
+        separate from its <code>name</code> (the variable used in templates) and an optional <code>help</code> text.</p>
+      <div id="demo-types" class="demo"></div>
+      <script data-demo>
+        SimpleForm.create({
+          element: '#demo-types',
+          schema: [
+            { name: 'service', label: 'Service name', defaultValue: 'checkin-api' },
+            { name: 'replicas', label: 'Replicas', type: 'number', defaultValue: 2, min: 1, max: 20, step: 1 },
+            { name: 'releaseDate', label: 'Release date', type: 'date' },
+            { name: 'env', label: 'Environment', type: 'select', options: ['dev', 'staging', 'prod'], defaultValue: 'staging' },
+            { name: 'owner', label: 'Owner email', type: 'email', placeholder: 'team@example.com' },
+            { name: 'docs', label: 'Docs URL', type: 'url', placeholder: 'https://…' },
+            { name: 'notes', label: 'Notes', type: 'textarea', rows: 2, help: 'Multi-line text is kept as is.' },
+            { name: 'autoscale', label: 'Enable autoscaling', type: 'checkbox' }
+          ],
+          templates: {
+            yaml: {
+              title: 'deployment.yaml', language: 'yaml', filename: '{{service}}-{{env}}.yaml',
+              source: [
+                'service: {{service}}',
+                'environment: {{env}}',
+                'replicas: {{replicas}}',
+                'autoscaling: {{#if autoscale}}true{{else}}false{{/if}}',
+                '{{#if releaseDate}}releaseDate: "{{releaseDate}}"{{/if}}',
+                '{{#if owner}}owner: {{owner}}{{/if}}',
+                '{{#if docs}}docs: {{docs}}{{/if}}',
+                '{{#if notes}}notes: {{json notes}}{{/if}}'
+              ].join('\n')
+            }
+          }
+        });
+      </script>
+    </section>
+
+    <!-- ============================================================ 3 -->
+    <section class="step" id="validation" data-title="Validation">
+      <h2>3. Validation</h2>
+      <p>Declarative rules: <code>required</code>, <code>pattern</code>, <code>min</code>/<code>max</code>,
+        <code>minLength</code>/<code>maxLength</code>, plus <code>custom</code> functions that can look at the other values.
+        Errors appear once a field has been touched. All messages can be translated through the <code>messages</code> option —
+        this demo uses Italian.</p>
+      <ul class="try">
+        <li>Set an end date before the start date.</li>
+        <li>Type a ticket that does not match <code>OPS-1234</code>.</li>
+      </ul>
+      <div id="demo-validation" class="demo"></div>
+      <script data-demo>
+        SimpleForm.create({
+          element: '#demo-validation',
+          messages: {
+            required: '{label} è obbligatorio',
+            pattern: '{label} non ha un formato valido',
+            minLength: '{label} deve avere almeno {minLength} caratteri',
+            min: '{label} deve essere almeno {min}',
+            max: '{label} deve essere al massimo {max}',
+            incomplete: 'Completa i campi evidenziati per abilitare copia e download.',
+            summary: '{count} campo/i da correggere',
+            copy: 'Copia', copied: 'Copiato!', download: 'Scarica', reset: 'Azzera'
+          },
+          schema: [
+            { name: 'ticket', label: 'Ticket', required: true, pattern: '^OPS-\\d{4}$', placeholder: 'OPS-1234',
+              validation: { messages: { pattern: 'Formato atteso: OPS-1234' } } },
+            { name: 'reason', label: 'Motivazione', type: 'textarea', required: true, minLength: 10 },
+            { name: 'start', label: 'Inizio', type: 'date', required: true },
+            { name: 'end', label: 'Fine', type: 'date', required: true,
+              validation: { custom: (value, all) => !all.start || value >= all.start || 'La fine deve seguire l\'inizio' } },
+            { name: 'impact', label: 'Impatto (1-5)', type: 'number', required: true, min: 1, max: 5 }
+          ],
+          templates: {
+            change: {
+              title: 'Change request', language: 'yaml',
+              source: 'ticket: {{ticket}}\nwindow: {{start}} → {{end}}\nimpact: {{impact}}\nreason: {{json reason}}'
+            }
+          }
+        });
+      </script>
+    </section>
+
+    <!-- ============================================================ 4 -->
+    <section class="step" id="autocomplete" data-title="Autocomplete">
+      <h2>4. Autocomplete</h2>
+      <p>The <code>autocomplete</code> type is an accessible combobox: arrows to move, <kbd>Enter</kbd> to choose,
+        <kbd>Esc</kbd> to close. Options may be <code>{ text, value }</code> pairs: the user sees the text, the template receives
+        the value. Free text is rejected unless <code>allowCustom: true</code>. Options can also come from an async function.</p>
+      <ul class="try">
+        <li>Type <code>vi</code> in <em>Country</em> and choose <em>Viet Nam</em>: the output gets <code>VN</code>.</li>
+        <li>Type <code>Atlantis</code> and leave the field: you get an error.</li>
+        <li><em>Airline</em> simulates a server lookup with a 400 ms delay.</li>
+      </ul>
+      <div id="demo-autocomplete" class="demo"></div>
+      <script data-demo>
+        const airlines = ['Air France', 'Alitalia', 'Iberia', 'ITA Airways', 'Lufthansa', 'KLM', 'Vueling', 'easyJet'];
+        SimpleForm.create({
+          element: '#demo-autocomplete',
+          schema: [
+            { name: 'country', label: 'Country', type: 'autocomplete', required: true, placeholder: 'Start typing…',
+              options: [
+                { text: 'Andorra', value: 'AD' }, { text: 'Czech Republic', value: 'CZ' }, { text: 'Denmark', value: 'DK' },
+                { text: 'France', value: 'FR' }, { text: 'Italy', value: 'IT' }, { text: 'Côte d’Ivoire', value: 'CI' },
+                { text: 'Norway', value: 'NO' }, { text: 'Türkiye', value: 'TR' }, { text: 'Viet Nam', value: 'VN' }
+              ] },
+            { name: 'timeZone', label: 'Time zone', type: 'autocomplete', allowCustom: true,
+              options: ['Europe/Paris', 'Europe/Rome', 'Europe/Madrid', 'Asia/Ho_Chi_Minh'],
+              help: 'allowCustom: any IANA zone is accepted' },
+            { name: 'airline', label: 'Airline (async)', type: 'autocomplete',
+              options: ({ query }) => new Promise((resolve) => setTimeout(() =>
+                resolve(airlines.filter((a) => a.toLowerCase().includes(query.toLowerCase()))), 400)) }
+          ],
+          templates: {
+            config: { title: 'Config', language: 'json',
+              source: '{\n  "country": {{json country}},\n  "timeZone": {{json timeZone}},\n  "airline": {{json airline}}\n}' }
+          }
+        });
+      </script>
+    </section>
+
+    <!-- ============================================================ 5 -->
+    <section class="step" id="conditional" data-title="Conditional & dependent fields">
+      <h2>5. Conditional &amp; dependent fields</h2>
+      <p><code>visibleWhen</code> shows a field only when a condition holds (hidden fields are neither validated nor passed to
+        templates). <code>dependsOn</code> reloads options when another field changes: from an in-memory map, a function, or a URL
+        with placeholders (<code>optionsUrl: 'data/cities-{country}.json'</code>).</p>
+      <ul class="try">
+        <li>Choose <em>Italy</em>: the <em>VAT number</em> field appears and is required.</li>
+        <li>Change country: <em>Region</em> (map) and <em>City</em> (fetched JSON) reload.</li>
+      </ul>
+      <div id="demo-conditional" class="demo"></div>
+      <script data-demo>
+        SimpleForm.create({
+          element: '#demo-conditional',
+          schema: [
+            { name: 'company', label: 'Company', required: true },
+            { name: 'country', label: 'Country', type: 'select', required: true,
+              options: [{ text: 'Italy', value: 'IT' }, { text: 'France', value: 'FR' }, { text: 'Spain', value: 'ES' }] },
+            { name: 'vat', label: 'VAT number', required: true, pattern: '^IT\\d{11}$', placeholder: 'IT12345678901',
+              visibleWhen: { field: 'country', equals: 'IT' } },
+            { name: 'region', label: 'Region', type: 'select', dependsOn: 'country',
+              options: { IT: ['Lazio', 'Lombardia', 'Veneto'], FR: ['Île-de-France', 'Bretagne'], ES: ['Madrid', 'Cataluña'] } },
+            { name: 'city', label: 'City', type: 'select', dependsOn: 'country',
+              optionsUrl: 'data/cities-{country}.json' },
+            { name: 'invoice', label: 'Electronic invoice', type: 'checkbox',
+              visibleWhen: [{ field: 'country', equals: 'IT' }, { field: 'vat' }] },
+            { name: 'sdi', label: 'SDI code', required: true, minLength: 7, maxLength: 7,
+              visibleWhen: { field: 'invoice' } }
+          ],
+          templates: {
+            customer: {
+              title: 'Customer record', language: 'yaml',
+              source: 'company: {{company}}\ncountry: {{country}}\n{{#if region}}region: {{region}}\n{{/if}}{{#if city}}city: {{city}}\n{{/if}}{{#if vat}}vat: {{vat}}\n{{/if}}{{#if sdi}}sdi: {{sdi}}\n{{/if}}'
+            }
+          }
+        });
+      </script>
+    </section>
+
+    <!-- ============================================================ 6 -->
+    <section class="step" id="outputs" data-title="Helpers & output formats">
+      <h2>6. Helpers &amp; output formats</h2>
+      <p>Templates are plain Handlebars. Built-in helpers handle escaping and formatting:
+        <code>sql</code>, <code>quote</code>, <code>json</code>, <code>upper</code>, <code>lower</code>, <code>trim</code>,
+        <code>default</code>, <code>now</code>, <code>eq</code>/<code>ne</code>/<code>and</code>/<code>or</code>/<code>not</code>,
+        <code>join</code>. Add your own with <code>SimpleForm.registerHelper</code>. Each template sets its own
+        <code>language</code> (syntax highlighting), <code>filename</code> (itself a template) and <code>mode</code>:
+        <code>text</code> (default, shown as code) or <code>html</code> (rendered, values still escaped).</p>
+      <div id="demo-outputs" class="demo"></div>
+      <script data-demo>
+        SimpleForm.registerHelper('slug', (value) =>
+          String(value ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
+
+        SimpleForm.create({
+          element: '#demo-outputs',
+          schema: [
+            { name: 'title', label: 'Title', defaultValue: 'Maintenance: Città del Capo' },
+            { name: 'owner', label: 'Owner', placeholder: 'leave empty to see {{default}}' },
+            { name: 'message', label: 'Message', type: 'textarea', defaultValue: 'Say "hi" to O\'Brien' }
+          ],
+          templates: {
+            sql: { title: 'SQL', language: 'sql', source:
+              "INSERT INTO notice (slug, title, owner, created)\nVALUES ({{sql (slug title)}}, {{sql title}}, {{sql owner}}, {{sql (now \"date\")}});" },
+            shell: { title: 'Shell', language: 'shell', filename: '{{slug title}}.sh', source:
+              'curl -X POST "$API/notices" \\\n  -H "Content-Type: application/json" \\\n  --data @- <<\'JSON\'\n{ "title": {{json title}}, "message": {{json message}} }\nJSON' },
+            js: { title: 'JavaScript', filename: 'notice.js', source:
+              'export const notice = {\n  title: {{quote title}},\n  message: {{quote message}},\n};' },
+            json: { title: 'JSON', language: 'json', source:
+              '{ "title": {{json title}}, "owner": {{json (default owner "ops-team")}}, "upper": {{json (upper title)}} }' },
+            html: { title: 'HTML announcement', mode: 'html', source:
+              '<h4>{{title}}</h4><p>{{message}}</p><p><small>Owner: {{default owner "ops-team"}}</small></p>' }
+          }
+        });
+      </script>
+    </section>
+
+    <!-- ============================================================ 7 -->
+    <section class="step" id="presets" data-title="Presets & persistence">
+      <h2>7. Presets &amp; persistence</h2>
+      <p><code>presets</code> fill in groups of values at once (e.g. per environment). <code>persist: 'url'</code> stores the
+        values in the address bar — <em>Copy share link</em> gives a colleague the form already filled in.
+        <code>persist: 'local'</code> remembers the last values in <code>localStorage</code>.</p>
+      <ul class="try">
+        <li>Choose the <em>prod</em> preset, then reload the page: the values are still there (look at the URL).</li>
+        <li>The second form remembers what you type across reloads; <em>Reset</em> forgets it.</li>
+      </ul>
+      <div id="demo-presets" class="demo"></div>
+      <script data-demo>
+        SimpleForm.create({
+          element: '#demo-presets',
+          persist: 'url',
+          presets: {
+            staging: { host: 'db.staging.internal', port: 5432, database: 'app_staging', ssl: false },
+            prod: { host: 'db.prod.internal', port: 6432, database: 'app', ssl: true }
+          },
+          schema: [
+            { name: 'host', label: 'Host', required: true },
+            { name: 'port', label: 'Port', type: 'number', defaultValue: 5432 },
+            { name: 'database', label: 'Database', required: true },
+            { name: 'user', label: 'User', defaultValue: 'readonly' },
+            { name: 'ssl', label: 'Require SSL', type: 'checkbox' }
+          ],
+          templates: {
+            dsn: { title: 'Connection string', source: 'postgres://{{user}}@{{host}}:{{port}}/{{database}}{{#if ssl}}?sslmode=require{{/if}}' },
+            psql: { title: 'psql', language: 'shell', source: 'psql -h {{host}} -p {{port}} -U {{user}} -d {{database}}' }
+          }
+        });
+      </script>
+      <div id="demo-local" class="demo"></div>
+      <script data-demo>
+        SimpleForm.create({
+          element: '#demo-local',
+          persist: 'local',
+          schema: [
+            { name: 'author', label: 'Your name', required: true },
+            { name: 'team', label: 'Team', type: 'select', options: ['Ops', 'Dev', 'Data'] }
+          ],
+          templates: { signature: { title: 'Commit trailer', source: 'Reviewed-by: {{author}} ({{default team "no team"}})' } }
+        });
+      </script>
+    </section>
+
+    <!-- ============================================================ 8 -->
+    <section class="step" id="batch" data-title="Batch & CSV">
+      <h2>8. Batch &amp; CSV import</h2>
+      <p>With <code>batch</code> the form becomes a list of rows. Templates with <code>perRow: true</code> are rendered once per
+        row; other templates receive <code>rows</code> and <code>count</code>. Paste a CSV (with or without a header line,
+        comma/semicolon/tab separated) to create many rows at once.</p>
+      <ul class="try">
+        <li>Open <em>Import CSV</em> and paste:<br><code class="csv-sample">code;name;country
+CDG;Charles de Gaulle;FR
+FCO;Leonardo da Vinci;IT
+MAD;Adolfo Suárez Barajas;ES</code></li>
+      </ul>
+      <div id="demo-batch" class="demo"></div>
+      <script data-demo>
+        SimpleForm.create({
+          element: '#demo-batch',
+          batch: { min: 1, max: 50 },
+          schema: [
+            { name: 'code', label: 'Code', required: true, pattern: '^[A-Z]{3}$' },
+            { name: 'name', label: 'Name', required: true },
+            { name: 'country', label: 'Country', type: 'select', options: ['FR', 'IT', 'ES', 'DE'] }
+          ],
+          templates: {
+            inserts: { title: 'Inserts (one per row)', language: 'sql', perRow: true, filename: 'airports.sql',
+              source: 'INSERT INTO airport (code, name, country) VALUES ({{sql code}}, {{sql name}}, {{sql country}});' },
+            summary: { title: 'Summary', source: '{{count}} airport(s): {{#each rows}}{{code}}{{#unless @last}}, {{/unless}}{{/each}}' }
+          }
+        });
+      </script>
+    </section>
+
+    <!-- ============================================================ 9 -->
+    <section class="step" id="hooks" data-title="Hooks & events">
+      <h2>9. Hooks &amp; events</h2>
+      <p>React to what happens with option hooks (<code>onChange</code>, <code>onRender</code>, <code>onInvalid</code>,
+        <code>onCopy</code>, <code>onError</code>), with <code>form.on(event, fn)</code>, or with DOM events
+        (<code>simpleform:change</code>, …) that bubble from the container. Use them to send outputs to an API, log usage, or
+        drive other widgets.</p>
+      <div id="demo-hooks" class="demo"></div>
+      <ol id="hooks-log" class="event-log" aria-live="polite"></ol>
+      <script data-demo>
+        const log = (type, text) => {
+          const item = document.createElement('li');
+          item.innerHTML = `<b></b> <span></span>`;
+          item.querySelector('b').textContent = type;
+          item.querySelector('span').textContent = text;
+          document.getElementById('hooks-log').prepend(item);
+        };
+        const hooksForm = SimpleForm.create({
+          element: '#demo-hooks',
+          schema: [{ name: 'flight', label: 'Flight', required: true, pattern: '^[A-Z]{2}\\d{1,4}$', placeholder: 'AF1234' }],
+          templates: { notam: { title: 'Message', source: 'Flight {{flight}} delayed' } },
+          onChange: ({ values, valid }) => log('change', `${JSON.stringify(values)} valid=${valid}`),
+          onInvalid: ({ errors }) => log('invalid', Object.values(errors).join('; ')),
+          onCopy: ({ template, text }) => log('copy', `${template}: ${text}`)
+        });
+        hooksForm.on('render', ({ outputs }) => log('render', outputs.notam));
+      </script>
+    </section>
+
+    <!-- =========================================================== 10 -->
+    <section class="step" id="plugins" data-title="Custom field plugins">
+      <h2>10. Custom field plugins</h2>
+      <p>New field types are registered once with <code>SimpleForm.registerField(type, { render, getValue, setValue, validate,
+        update })</code> and can then be used in any schema. Here a <code>coordinates</code> field made of two inputs.</p>
+      <div id="demo-plugin" class="demo"></div>
+      <script data-demo>
+        SimpleForm.registerField('coordinates', {
+          render(ctx) {
+            const box = document.createElement('div');
+            box.className = 'coords';
+            box.innerHTML = `<input class="sf-input" id="${ctx.id}" aria-label="Latitude" placeholder="lat" inputmode="decimal">
+                             <input class="sf-input" aria-label="Longitude" placeholder="lon" inputmode="decimal">
+                             <button type="button" class="sf-button sf-button-ghost">Paris CDG</button>`;
+            box.addEventListener('input', () => ctx.emit());
+            box.querySelector('button').addEventListener('click', () => { this.setValue(box, '49.0097,2.5479'); ctx.emit(); });
+            return box;
+          },
+          getValue(box) {
+            const [lat, lon] = [...box.querySelectorAll('input')].map((i) => i.value.trim());
+            return lat || lon ? { lat: Number(lat), lon: Number(lon) } : '';
+          },
+          setValue(box, value) {
+            const [lat = '', lon = ''] = typeof value === 'string' ? value.split(',') : [value?.lat ?? '', value?.lon ?? ''];
+            const [a, b] = box.querySelectorAll('input');
+            a.value = lat; b.value = lon;
+          },
+          validate(value, ctx) {
+            if (!value) return null;
+            const ok = Math.abs(value.lat) <= 90 && Math.abs(value.lon) <= 180;
+            return ok ? null : ctx.format('{label}: latitude ±90, longitude ±180');
+          }
+        });
+
+        SimpleForm.create({
+          element: '#demo-plugin',
+          schema: [
+            { name: 'code', label: 'Airport code', defaultValue: 'CDG' },
+            { name: 'position', label: 'Position', type: 'coordinates', required: true }
+          ],
+          templates: {
+            geo: { title: 'GeoJSON', language: 'json', source:
+              '{ "type": "Feature", "id": {{json code}},\n  "geometry": { "type": "Point", "coordinates": [{{position.lon}}, {{position.lat}}] } }' }
+          }
+        });
+      </script>
+    </section>
+
+    <!-- =========================================================== 11 -->
+    <section class="step" id="declarative" data-title="No-code (declarative) mode">
+      <h2>11. No-code mode: just markup</h2>
+      <p>Perfect for wiki or Confluence pages: add <code>data-simpleform</code> to a container, put the configuration in a
+        <code>&lt;script type="application/json" class="sf-schema"&gt;</code> and the templates in
+        <code>&lt;script type="text/templates"&gt;</code>. The library initializes it automatically — no JavaScript to write.
+        Templates may be indented freely: common indentation is removed.</p>
+      <div class="demo" data-simpleform id="demo-declarative">
+        <script type="application/json" class="sf-schema">
+          {
+            "schema": [
+              { "name": "user", "label": "Username", "required": true, "pattern": "^[a-z][a-z0-9._-]{2,}$" },
+              { "name": "role", "label": "Role", "type": "select", "options": ["reader", "editor", "admin"], "defaultValue": "reader" },
+              { "name": "expires", "label": "Expires", "type": "date" }
+            ]
+          }
+        </script>
+        <script type="text/templates" name="Grant" data-language="sql" data-filename="grant-{{user}}.sql">
+          GRANT {{upper role}} TO {{sql user}};
+          {{#if expires}}
+          -- revoke on {{expires}}
+          {{/if}}
+        </script>
+        <script type="text/templates" name="Revoke" data-language="sql">
+          REVOKE {{upper role}} FROM {{sql user}};
+        </script>
+      </div>
+      <details class="show-code"><summary>Show code</summary><pre class="tour-code"><code id="declarative-source"></code></pre></details>
+
+      <p>The configuration can also live in a separate file: <code>&lt;div data-simpleform data-schema-src="data/airport.json"&gt;</code></p>
+      <div class="demo" data-simpleform data-schema-src="data/airport.json" id="demo-remote"></div>
+    </section>
+
+    <!-- =========================================================== 12 -->
+    <section class="step" id="import-export" data-title="Import & export schemas">
+      <h2>12. Import &amp; export schemas</h2>
+      <p><code>SimpleForm.loadSchema(url)</code> loads a JSON configuration; <code>form.exportSchema()</code> turns a live form
+        back into JSON (functions cannot be serialized and are reported in <code>warnings</code>). Schemas become reusable files
+        you can version and share.</p>
+      <div class="tour-actions">
+        <button type="button" class="tour-button" id="load-schema">Load data/airport.json</button>
+        <button type="button" class="tour-button" id="export-schema" disabled>Export as JSON</button>
+      </div>
+      <div id="demo-import" class="demo"></div>
+      <pre class="tour-code" id="export-output" hidden><code></code></pre>
+      <script data-demo>
+        let imported;
+        document.getElementById('load-schema').addEventListener('click', async () => {
+          const config = await SimpleForm.loadSchema('data/airport.json');
+          imported?.destroy();
+          imported = SimpleForm.create({ ...config, element: '#demo-import', title: 'Imported with loadSchema()' });
+          document.getElementById('export-schema').disabled = false;
+        });
+        document.getElementById('export-schema').addEventListener('click', () => {
+          const { config, warnings } = imported.exportSchema();
+          const out = document.getElementById('export-output');
+          out.hidden = false;
+          out.querySelector('code').textContent = JSON.stringify(config, null, 2) +
+            (warnings.length ? `\n\n// warnings:\n// ${warnings.join('\n// ')}` : '');
+        });
+      </script>
+    </section>
+
+    <!-- =========================================================== 13 -->
+    <section class="step" id="legacy" data-title="Generate button & 1.x compatibility">
+      <h2>13. "Generate" flow &amp; 1.x compatibility</h2>
+      <p>Prefer an explicit button? Set <code>livePreview: false</code>: outputs appear after <em>Generate</em>, which validates
+        everything and focuses the first error. Pages written for 1.x keep working through the <code>ScriptGenerator</code>
+        adapter — <code>fieldName</code>/<code>values</code> are mapped, <code>defaultValue</code> now works, and jQuery is no
+        longer needed.</p>
+      <div id="demo-legacy" class="demo">
+        <script type="text/templates" name="Update">
+          airportCode: {{airportCode}}
+          countryCode: {{countryCode}}
+          timeZone: {{timeZone}}
+        </script>
+        <script type="text/templates" name="Rollback">
+          <b>airportCode: {{airportCode}}</b>
+        </script>
+      </div>
+      <script data-demo>
+        // unchanged 1.x code
+        const countries = [{ text: 'France', value: 'FR' }, { text: 'Turchia', value: 'TR' }, { text: 'Viet Nam', value: 'VN' }];
+        new ScriptGenerator([
+          { fieldName: 'airportCode', placeholder: 'CDG', defaultValue: 'CDG' },
+          { fieldName: 'countryCode', placeholder: 'France', values: countries },
+          { fieldName: 'timeZone', placeholder: 'Europe/Paris', values: ['Europe/Paris', 'Europe/Madrid'] }
+        ], 'demo-legacy');
+      </script>
+    </section>
+
+    <section class="step" id="next" data-title="Where to go next">
+      <h2>Where to go next</h2>
+      <ul>
+        <li>The <a href="../../README.md">README</a> documents every option and method.</li>
+        <li>Theme the forms through CSS variables (<code>--sf-accent</code>, <code>--sf-code-bg</code>, …) — try the
+          <em>Dark theme</em> button at the top.</li>
+        <li>Run the test suites: <code>npm test</code> (unit + functional) and <code>npm run test:e2e</code> (this page in a real browser).</li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<script src="showcase.js"></script>
+</body>
+</html>

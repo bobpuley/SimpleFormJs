@@ -1,0 +1,102 @@
+:root {
+  --tour-bg: #ffffff;
+  --tour-text: #1f2328;
+  --tour-muted: #656d76;
+  --tour-border: #d0d7de;
+  --tour-surface: #f6f8fa;
+  --tour-accent: #0969da;
+  color-scheme: light;
+}
+:root.dark {
+  --tour-bg: #0d1117;
+  --tour-text: #e6edf3;
+  --tour-muted: #8d96a0;
+  --tour-border: #30363d;
+  --tour-surface: #161b22;
+  --tour-accent: #4493f8;
+  color-scheme: dark;
+}
+/* the same variables theme SimpleForm itself */
+:root.dark .sf-root {
+  --sf-text: var(--tour-text);
+  --sf-muted: var(--tour-muted);
+  --sf-border: var(--tour-border);
+  --sf-bg: var(--tour-surface);
+  --sf-surface: var(--tour-surface);
+  --sf-accent: var(--tour-accent);
+  --sf-code-bg: #010409;
+}
+:root.dark .sf-notice { background: #3b2e00; color: #f2cc60; }
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--tour-bg);
+  color: var(--tour-text);
+  line-height: 1.55;
+}
+a { color: var(--tour-accent); }
+code, kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; }
+:not(pre) > code { background: var(--tour-surface); border: 1px solid var(--tour-border); border-radius: 4px; padding: 0 0.3em; }
+kbd { border: 1px solid var(--tour-border); border-bottom-width: 2px; border-radius: 4px; padding: 0 0.35em; }
+
+.tour-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid var(--tour-border);
+}
+.tour-header h1 { margin: 0; font-size: 1.6rem; }
+.tour-header p { margin: 0.25rem 0 0; color: var(--tour-muted); }
+.badge { font-size: 0.8rem; vertical-align: middle; background: var(--tour-accent); color: #fff; border-radius: 999px; padding: 0.1rem 0.5rem; }
+
+.tour-layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); max-width: 80rem; margin: 0 auto; }
+.tour-nav { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow: auto; padding: 1.5rem 1rem; }
+.tour-nav ol { margin: 0; padding-left: 1.4rem; }
+.tour-nav li { margin: 0.3rem 0; }
+.tour-nav a { text-decoration: none; color: var(--tour-muted); }
+.tour-nav a[aria-current] { color: var(--tour-accent); font-weight: 600; }
+
+.tour-main { padding: 1rem 2rem 4rem; min-width: 0; }
+.step { padding: 1.5rem 0 2rem; border-bottom: 1px solid var(--tour-border); scroll-margin-top: 1rem; }
+.step h2 { margin-top: 0; }
+.try { background: var(--tour-surface); border-left: 3px solid var(--tour-accent); padding: 0.6rem 1rem 0.6rem 2rem; border-radius: 0 6px 6px 0; }
+.try::before { content: "Try it"; display: block; margin-left: -1rem; font-weight: 600; }
+.csv-sample { display: inline-block; white-space: pre; margin-top: 0.3rem; }
+
+.demo { border: 1px solid var(--tour-border); border-radius: 8px; padding: 1rem; margin: 1rem 0 0.5rem; }
+.show-code summary { cursor: pointer; color: var(--tour-accent); font-weight: 500; }
+.tour-code {
+  background: #0d1117;
+  color: #e6edf3;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow: auto;
+  font-size: 0.85rem;
+}
+.tour-actions { display: flex; gap: 0.5rem; margin: 1rem 0 0; }
+.tour-button {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--tour-accent);
+  background: transparent;
+  color: var(--tour-accent);
+  cursor: pointer;
+}
+.tour-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.event-log { font-family: ui-monospace, Menlo, monospace; font-size: 0.85rem; max-height: 12rem; overflow: auto; background: var(--tour-surface); border-radius: 6px; padding: 0.5rem 0.5rem 0.5rem 2.5rem; }
+.event-log:empty::before { content: "Events will appear here…"; color: var(--tour-muted); margin-left: -2rem; }
+.event-log b { color: var(--tour-accent); }
+
+.coords { display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.5rem; }
+
+@media (max-width: 900px) {
+  .tour-layout { grid-template-columns: 1fr; }
+  .tour-nav { position: static; max-height: none; border-bottom: 1px solid var(--tour-border); }
+  .tour-main { padding: 1rem; }
+}
