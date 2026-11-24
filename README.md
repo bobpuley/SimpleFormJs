@@ -1,6 +1,8 @@
 SimpleFormJs
 ============
 
+[![npm](https://img.shields.io/npm/v/simpleformjs)](https://www.npmjs.com/package/simpleformjs)
+
 **Declare the data once, collect it with a generated form, produce scripts, configurations and documents with templates.**
 
 SimpleFormJs turns a small schema into an accessible form and feeds the values to one or more
@@ -36,10 +38,17 @@ Install
 <script src="https://cdn.jsdelivr.net/gh/bobpuley/SimpleFormJs@2/dist/simpleform.umd.min.js"></script>
 ```
 
+Or from the npm package (same files):
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simpleformjs@2/dist/simpleform.css">
+<script src="https://cdn.jsdelivr.net/npm/simpleformjs@2/dist/simpleform.umd.min.js"></script>
+```
+
 Handlebars is looked up when a form is created, not when the library loads, so the order of the two scripts does not
 matter as long as both are on the page before you create a form.
 
-**npm / bundlers** (once published to npm; until then `npm install github:bobpuley/SimpleFormJs`):
+**npm / bundlers:**
 
 ```bash
 npm install simpleformjs handlebars
