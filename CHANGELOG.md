@@ -2,7 +2,7 @@
 
 ## 2.0.0
 
-Complete rewrite in vanilla JavaScript. See `ideas/PROPOSTA.md` for the rationale.
+Complete rewrite in vanilla JavaScript.
 
 ### Breaking
 - jQuery is no longer used. The bundle lives in `dist/` (`simpleform.umd(.min).js`, `simpleform.esm(.min).js`,

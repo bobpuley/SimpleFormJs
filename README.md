@@ -17,7 +17,8 @@ should never touch the template.
 - No-code mode: a form from markup only. JSON schemas you can load and export.
 - 1.x pages keep working through the `ScriptGenerator` adapter.
 
-👉 **Guided tour with live demos:** [`showcases/example/`](showcases/example/index.html) (`npm run serve`, then open
+👉 **Live demo / guided tour:** <https://bobpuley.github.io/SimpleFormJs/showcases/example/> — source in
+[`showcases/example/`](showcases/example/index.html) (run it locally with `npm run serve`, then open
 <http://localhost:4173/showcases/example/>).
 
 Contents: [Install](#install) · [Quick start](#quick-start) · [Fields](#fields) · [Templates](#templates) ·
