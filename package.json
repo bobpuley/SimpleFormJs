@@ -1,0 +1,55 @@
+{
+  "name": "simpleformjs",
+  "version": "2.0.0",
+  "description": "Generate scripts, configurations and documents from a declarative form and Handlebars templates. Zero jQuery.",
+  "license": "MIT",
+  "author": "Marco Pugliese",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bobpuley/SimpleFormJs.git"
+  },
+  "type": "module",
+  "main": "./dist/simpleform.umd.js",
+  "module": "./dist/simpleform.esm.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/simpleform.esm.mjs",
+      "require": "./dist/simpleform.umd.js"
+    },
+    "./simpleform.css": "./dist/simpleform.css",
+    "./package.json": "./package.json"
+  },
+  "jsdelivr": "./dist/simpleform.umd.min.js",
+  "unpkg": "./dist/simpleform.umd.min.js",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./src/fields/builtin.js",
+    "./src/umd.js",
+    "./dist/simpleform.umd*.js",
+    "*.css"
+  ],
+  "peerDependencies": {
+    "handlebars": "^4.7.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:functional": "vitest run tests/functional",
+    "test:e2e": "npm run build && playwright test",
+    "test:all": "npm run test && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "esbuild": "^0.28.2",
+    "handlebars": "^4.7.10",
+    "jsdom": "^31.0.1",
+    "vitest": "^5.1.1"
+  }
+}
