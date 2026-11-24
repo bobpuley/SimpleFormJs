@@ -3,7 +3,7 @@
  * The delimiter is auto-detected (",", ";" or tab) from the first line when not given.
  */
 export function parseCSV(text, { delimiter } = {}) {
-  const src = String(text ?? '').replace(/^﻿/, '');
+  const src = String(text ?? '').replace(/^\uFEFF/, '');
   const sep = delimiter ?? detectDelimiter(src);
   const rows = [];
   let row = [];

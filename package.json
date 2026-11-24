@@ -43,11 +43,16 @@
     "test:unit": "vitest run tests/unit",
     "test:functional": "vitest run tests/functional",
     "test:e2e": "npm run build && playwright test",
-    "test:all": "npm run test && npm run test:e2e"
+    "test:all": "npm run test && npm run test:e2e",
+    "lint": "eslint .",
+    "prepublishOnly": "npm run lint && npm test && npm run build"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
     "esbuild": "^0.28.2",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
     "handlebars": "^4.7.10",
     "jsdom": "^31.0.1",
     "vitest": "^5.1.1"

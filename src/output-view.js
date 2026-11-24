@@ -5,6 +5,7 @@ const EXTENSIONS = { sql: 'sql', json: 'json', yaml: 'yaml', yml: 'yaml', shell:
 export const defaultFilename = (template) =>
   `${template.key.replace(/\W+/g, '_')}.${template.mode === 'html' ? 'html' : EXTENSIONS[template.language] ?? 'txt'}`;
 
+// eslint-disable-next-line no-control-regex
 export const safeFilename = (name) => String(name).replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '_').trim() || 'output.txt';
 
 /** Renders one panel per template with Copy and Download actions. */
@@ -128,7 +129,7 @@ export async function copyToClipboard(doc, text, html) {
   area.value = text;
   doc.body.append(area);
   area.select();
-  let ok = false;
+  let ok;
   try {
     ok = doc.execCommand?.('copy') ?? false;
   } catch {

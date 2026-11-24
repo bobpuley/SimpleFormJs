@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SimpleForm, ScriptGenerator, autoInit, loadSchema } from '../../src/index.js';
-import { control, field, mount, outputText, type, flush } from '../helpers.js';
+import { control, mount, outputText, type, flush } from '../helpers.js';
 
 const base = {
   schema: [

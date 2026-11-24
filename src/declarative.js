@@ -35,7 +35,7 @@ export async function loadSchema(url, { fetch: fetchImpl } = {}) {
  * Extra options (hooks, functions) can be passed as `overrides`.
  */
 export async function fromElement(element, overrides = {}) {
-  let config = {};
+  let config;
   const inline = element.querySelector(':scope > script[type="application/json"].sf-schema, :scope > script[type="application/json"][data-sf-schema]');
   if (inline) {
     try {
@@ -66,7 +66,7 @@ export async function autoInit(root = globalThis.document, overrides = {}) {
         return await fromElement(el, overrides);
       } catch (err) {
         el.dataset.sfError = err.message;
-        console.error('[SimpleForm] auto-init failed for', el, err); // eslint-disable-line no-console
+        console.error('[SimpleForm] auto-init failed for', el, err);
         throw err;
       } finally {
         delete el.dataset.sfPending;

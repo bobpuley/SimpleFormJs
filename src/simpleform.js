@@ -539,7 +539,7 @@ export class SimpleForm {
         hook(payload);
       } catch (err) {
         if (event !== 'error') this.reportError(err, { hook: HOOKS[event] });
-        else console.error('[SimpleForm] onError hook failed', err); // eslint-disable-line no-console
+        else console.error('[SimpleForm] onError hook failed', err);
       }
     }
     const CustomEventCtor = this.doc.defaultView?.CustomEvent ?? globalThis.CustomEvent;
@@ -547,7 +547,7 @@ export class SimpleForm {
   }
 
   reportError(error, context = {}) {
-    if (!this.config.hooks.onError) console.error('[SimpleForm]', error); // eslint-disable-line no-console
+    if (!this.config.hooks.onError) console.error('[SimpleForm]', error);
     this.emit('error', { error, ...context });
   }
 

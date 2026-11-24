@@ -491,7 +491,7 @@ registerField("autocomplete", autocomplete);
 
 // src/csv.js
 function parseCSV(text, { delimiter } = {}) {
-  const src = String(text ?? "").replace(/^﻿/, "");
+  const src = String(text ?? "").replace(/^\uFEFF/, "");
   const sep = delimiter ?? detectDelimiter(src);
   const rows = [];
   let row = [];
@@ -771,7 +771,7 @@ async function copyToClipboard(doc, text, html) {
   area.value = text;
   doc.body.append(area);
   area.select();
-  let ok = false;
+  let ok;
   try {
     ok = doc.execCommand?.("copy") ?? false;
   } catch {
@@ -1909,7 +1909,7 @@ async function loadSchema(url, { fetch: fetchImpl } = {}) {
   return data;
 }
 async function fromElement(element, overrides = {}) {
-  let config = {};
+  let config;
   const inline = element.querySelector(':scope > script[type="application/json"].sf-schema, :scope > script[type="application/json"][data-sf-schema]');
   if (inline) {
     try {

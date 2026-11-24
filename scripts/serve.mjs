@@ -30,5 +30,5 @@ createServer(async (req, res) => {
     res.end(err.code === 'EACCES' ? 'Forbidden' : 'Not found');
   }
 }).listen(PORT, '127.0.0.1', () => {
-  console.log(`SimpleFormJs dev server: http://localhost:${PORT}/showcases/example/`); // eslint-disable-line no-console
+  console.log(`SimpleFormJs dev server: http://localhost:${PORT}/showcases/example/`);
 });
